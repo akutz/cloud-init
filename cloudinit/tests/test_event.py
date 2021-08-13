@@ -5,12 +5,12 @@ from cloudinit.event import EventType, EventScope, userdata_to_events
 
 class TestEvent:
     def test_userdata_to_events(self):
-        userdata = {'network': {'when': ['boot']}}
+        userdata = {"network": {"when": ["boot"]}}
         expected = {EventScope.NETWORK: {EventType.BOOT}}
         assert expected == userdata_to_events(userdata)
 
     def test_invalid_scope(self, caplog):
-        userdata = {'networkasdfasdf': {'when': ['boot']}}
+        userdata = {"networkasdfasdf": {"when": ["boot"]}}
         userdata_to_events(userdata)
         assert (
             "'networkasdfasdf' is not a valid EventScope! Update data "
@@ -18,7 +18,7 @@ class TestEvent:
         ) in caplog.text
 
     def test_invalid_event(self, caplog):
-        userdata = {'network': {'when': ['bootasdfasdf']}}
+        userdata = {"network": {"when": ["bootasdfasdf"]}}
         userdata_to_events(userdata)
         assert (
             "'bootasdfasdf' is not a valid EventType! Update data "

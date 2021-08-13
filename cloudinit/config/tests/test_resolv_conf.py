@@ -20,9 +20,9 @@ class TestGenerateResolvConf:
     @mock.patch("cloudinit.config.cc_resolv_conf.templater.render_to_file")
     def test_dist_resolv_conf_fn(self, m_render_to_file):
         self.dist.resolve_conf_fn = "/tmp/resolv-test.conf"
-        generate_resolv_conf(self.tmpl_fn,
-                             mock.MagicMock(),
-                             self.dist.resolve_conf_fn)
+        generate_resolv_conf(
+            self.tmpl_fn, mock.MagicMock(), self.dist.resolve_conf_fn
+        )
 
         assert [
             mock.call(mock.ANY, self.dist.resolve_conf_fn, mock.ANY)

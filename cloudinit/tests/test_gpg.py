@@ -17,8 +17,9 @@ class TestReceiveKeys(CiTestCase):
         """retry should be done on gpg receive keys failure."""
         retries = (1, 2, 4)
         my_exc = subp.ProcessExecutionError(
-            stdout='', stderr='', exit_code=2, cmd=['mycmd'])
-        m_subp.side_effect = (my_exc, my_exc, ('', ''))
+            stdout="", stderr="", exit_code=2, cmd=["mycmd"]
+        )
+        m_subp.side_effect = (my_exc, my_exc, ("", ""))
         gpg.recv_key("ABCD", "keyserver.example.com", retries=retries)
         self.assertEqual([mock.call(1), mock.call(2)], m_sleep.call_args_list)
 
@@ -27,7 +28,8 @@ class TestReceiveKeys(CiTestCase):
         naplen = 1
         keyid, keyserver = ("ABCD", "keyserver.example.com")
         m_subp.side_effect = subp.ProcessExecutionError(
-            stdout='', stderr='', exit_code=2, cmd=['mycmd'])
+            stdout="", stderr="", exit_code=2, cmd=["mycmd"]
+        )
         with self.assertRaises(ValueError) as rcm:
             gpg.recv_key(keyid, keyserver, retries=(naplen,))
         self.assertIn(keyid, str(rcm.exception))
@@ -37,7 +39,8 @@ class TestReceiveKeys(CiTestCase):
     def test_no_retries_on_none(self, m_subp, m_sleep):
         """retry should not be done if retries is None."""
         m_subp.side_effect = subp.ProcessExecutionError(
-            stdout='', stderr='', exit_code=2, cmd=['mycmd'])
+            stdout="", stderr="", exit_code=2, cmd=["mycmd"]
+        )
         with self.assertRaises(ValueError):
             gpg.recv_key("ABCD", "keyserver.example.com", retries=None)
         m_sleep.assert_not_called()
@@ -46,10 +49,16 @@ class TestReceiveKeys(CiTestCase):
         """Verify gpg is called with expected args."""
         key, keyserver = ("DEADBEEF", "keyserver.example.com")
         retries = (1, 2, 4)
-        m_subp.return_value = ('', '')
+        m_subp.return_value = ("", "")
         gpg.recv_key(key, keyserver, retries=retries)
         m_subp.assert_called_once_with(
-            ['gpg', '--no-tty',
-             '--keyserver=%s' % keyserver, '--recv-keys', key],
-            capture=True)
+            [
+                "gpg",
+                "--no-tty",
+                "--keyserver=%s" % keyserver,
+                "--recv-keys",
+                key,
+            ],
+            capture=True,
+        )
         m_sleep.assert_not_called()

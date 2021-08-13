@@ -90,8 +90,7 @@ from string import ascii_letters, digits
 LOG = logging.getLogger(__name__)
 
 # We are removing certain 'painful' letters/numbers
-PW_SET = (''.join([x for x in ascii_letters + digits
-                   if x not in 'loLOI01']))
+PW_SET = "".join([x for x in ascii_letters + digits if x not in "loLOI01"])
 
 
 def handle_ssh_pwauth(pw_auth, service_cmd=None, service_name="ssh"):
@@ -108,12 +107,12 @@ def handle_ssh_pwauth(pw_auth, service_cmd=None, service_name="ssh"):
         service_cmd = ["service"]
 
     if util.is_true(pw_auth):
-        cfg_val = 'yes'
+        cfg_val = "yes"
     elif util.is_false(pw_auth):
-        cfg_val = 'no'
+        cfg_val = "no"
     else:
         bmsg = "Leaving SSH config '%s' unchanged." % cfg_name
-        if pw_auth is None or pw_auth.lower() == 'unchanged':
+        if pw_auth is None or pw_auth.lower() == "unchanged":
             LOG.debug("%s ssh_pwauth=%s", bmsg, pw_auth)
         else:
             LOG.warning("%s Unrecognized value: ssh_pwauth=%s", bmsg, pw_auth)
@@ -124,7 +123,7 @@ def handle_ssh_pwauth(pw_auth, service_cmd=None, service_name="ssh"):
         LOG.debug("No need to restart SSH service, %s not updated.", cfg_name)
         return
 
-    if 'systemctl' in service_cmd:
+    if "systemctl" in service_cmd:
         cmd = list(service_cmd) + ["restart", service_name]
     else:
         cmd = list(service_cmd) + [service_name, "restart"]
@@ -136,27 +135,27 @@ def handle(_name, cfg, cloud, log, args):
     if len(args) != 0:
         # if run from command line, and give args, wipe the chpasswd['list']
         password = args[0]
-        if 'chpasswd' in cfg and 'list' in cfg['chpasswd']:
-            del cfg['chpasswd']['list']
+        if "chpasswd" in cfg and "list" in cfg["chpasswd"]:
+            del cfg["chpasswd"]["list"]
     else:
         password = util.get_cfg_option_str(cfg, "password", None)
 
     expire = True
     plist = None
 
-    if 'chpasswd' in cfg:
-        chfg = cfg['chpasswd']
-        if 'list' in chfg and chfg['list']:
-            if isinstance(chfg['list'], list):
+    if "chpasswd" in cfg:
+        chfg = cfg["chpasswd"]
+        if "list" in chfg and chfg["list"]:
+            if isinstance(chfg["list"], list):
                 log.debug("Handling input for chpasswd as list.")
-                plist = util.get_cfg_option_list(chfg, 'list', plist)
+                plist = util.get_cfg_option_list(chfg, "list", plist)
             else:
                 log.debug("Handling input for chpasswd as multiline string.")
-                plist = util.get_cfg_option_str(chfg, 'list', plist)
+                plist = util.get_cfg_option_str(chfg, "list", plist)
                 if plist:
                     plist = plist.splitlines()
 
-        expire = util.get_cfg_option_bool(chfg, 'expire', expire)
+        expire = util.get_cfg_option_bool(chfg, "expire", expire)
 
     if not plist and password:
         (users, _groups) = ug_util.normalize_users_groups(cfg, cloud.distro)
@@ -175,9 +174,9 @@ def handle(_name, cfg, cloud, log, args):
         users = []
         # N.B. This regex is included in the documentation (i.e. the module
         # docstring), so any changes to it should be reflected there.
-        prog = re.compile(r'\$(1|2a|2y|5|6)(\$.+){2}')
+        prog = re.compile(r"\$(1|2a|2y|5|6)(\$.+){2}")
         for line in plist:
-            u, p = line.split(':', 1)
+            u, p = line.split(":", 1)
             if prog.match(p) is not None and ":" not in p:
                 hashed_plist_in.append(line)
                 hashed_users.append(u)
@@ -189,7 +188,7 @@ def handle(_name, cfg, cloud, log, args):
                     randlist.append("%s:%s" % (u, p))
                 plist_in.append("%s:%s" % (u, p))
                 users.append(u)
-        ch_in = '\n'.join(plist_in) + '\n'
+        ch_in = "\n".join(plist_in) + "\n"
         if users:
             try:
                 log.debug("Changing password for %s:", users)
@@ -197,9 +196,10 @@ def handle(_name, cfg, cloud, log, args):
             except Exception as e:
                 errors.append(e)
                 util.logexc(
-                    log, "Failed to set passwords with chpasswd for %s", users)
+                    log, "Failed to set passwords with chpasswd for %s", users
+                )
 
-        hashed_ch_in = '\n'.join(hashed_plist_in) + '\n'
+        hashed_ch_in = "\n".join(hashed_plist_in) + "\n"
         if hashed_users:
             try:
                 log.debug("Setting hashed password for %s:", hashed_users)
@@ -207,12 +207,16 @@ def handle(_name, cfg, cloud, log, args):
             except Exception as e:
                 errors.append(e)
                 util.logexc(
-                    log, "Failed to set hashed passwords with chpasswd for %s",
-                    hashed_users)
+                    log,
+                    "Failed to set hashed passwords with chpasswd for %s",
+                    hashed_users,
+                )
 
         if len(randlist):
-            blurb = ("Set the following 'random' passwords\n",
-                     '\n'.join(randlist))
+            blurb = (
+                "Set the following 'random' passwords\n",
+                "\n".join(randlist),
+            )
             util.multi_log(
                 "%s\n%s\n" % blurb, stderr=False, fallback_to_stdout=False
             )
@@ -230,8 +234,10 @@ def handle(_name, cfg, cloud, log, args):
                 log.debug("Expired passwords for: %s users", expired_users)
 
     handle_ssh_pwauth(
-        cfg.get('ssh_pwauth'), service_cmd=cloud.distro.init_cmd,
-        service_name=cloud.distro.get_option('ssh_svcname', 'ssh'))
+        cfg.get("ssh_pwauth"),
+        service_cmd=cloud.distro.init_cmd,
+        service_name=cloud.distro.get_option("ssh_svcname", "ssh"),
+    )
 
     if len(errors):
         log.debug("%s errors occured, re-raising the last one", len(errors))
@@ -248,7 +254,8 @@ def chpasswd(distro, plist_in, hashed=False):
             u, p = pentry.split(":")
             distro.set_passwd(u, p, hashed=hashed)
     else:
-        cmd = ['chpasswd'] + (['-e'] if hashed else [])
+        cmd = ["chpasswd"] + (["-e"] if hashed else [])
         subp.subp(cmd, plist_in)
+
 
 # vi: ts=4 expandtab

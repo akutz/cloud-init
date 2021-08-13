@@ -18,8 +18,9 @@ LOG = logging.getLogger(__name__)
 def export_armour(key):
     """Export gpg key, armoured key gets returned"""
     try:
-        (armour, _) = subp.subp(["gpg", "--export", "--armour", key],
-                                capture=True)
+        (armour, _) = subp.subp(
+            ["gpg", "--export", "--armour", key], capture=True
+        )
     except subp.ProcessExecutionError as error:
         # debug, since it happens for any key not on the system initially
         LOG.debug('Failed to export armoured key "%s": %s', key, error)
@@ -52,8 +53,12 @@ def recv_key(key, keyserver, retries=(1, 1)):
         trynum += 1
         try:
             subp.subp(cmd, capture=True)
-            LOG.debug("Imported key '%s' from keyserver '%s' on try %d",
-                      key, keyserver, trynum)
+            LOG.debug(
+                "Imported key '%s' from keyserver '%s' on try %d",
+                key,
+                keyserver,
+                trynum,
+            )
             return
         except subp.ProcessExecutionError as e:
             error = e
@@ -61,25 +66,31 @@ def recv_key(key, keyserver, retries=(1, 1)):
             naplen = next(sleeps)
             LOG.debug(
                 "Import failed with exit code %d, will try again in %ss",
-                error.exit_code, naplen)
+                error.exit_code,
+                naplen,
+            )
             time.sleep(naplen)
         except StopIteration as e:
             raise ValueError(
-                ("Failed to import key '%s' from keyserver '%s' "
-                 "after %d tries: %s") % (key, keyserver, trynum, error)
+                (
+                    "Failed to import key '%s' from keyserver '%s' "
+                    "after %d tries: %s"
+                )
+                % (key, keyserver, trynum, error)
             ) from e
 
 
 def delete_key(key):
     """Delete the specified key from the local gpg ring"""
     try:
-        subp.subp(["gpg", "--batch", "--yes", "--delete-keys", key],
-                  capture=True)
+        subp.subp(
+            ["gpg", "--batch", "--yes", "--delete-keys", key], capture=True
+        )
     except subp.ProcessExecutionError as error:
         LOG.warning('Failed delete key "%s": %s', key, error)
 
 
-def getkeybyid(keyid, keyserver='keyserver.ubuntu.com'):
+def getkeybyid(keyid, keyserver="keyserver.ubuntu.com"):
     """get gpg keyid from keyserver"""
     armour = export_armour(keyid)
     if not armour:
@@ -87,12 +98,13 @@ def getkeybyid(keyid, keyserver='keyserver.ubuntu.com'):
             recv_key(keyid, keyserver=keyserver)
             armour = export_armour(keyid)
         except ValueError:
-            LOG.exception('Failed to obtain gpg key %s', keyid)
+            LOG.exception("Failed to obtain gpg key %s", keyid)
             raise
         finally:
             # delete just imported key to leave environment as it was before
             delete_key(keyid)
 
     return armour
+
 
 # vi: ts=4 expandtab
