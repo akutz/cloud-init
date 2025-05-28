@@ -54,6 +54,7 @@ network:
       nameservers:
         search: [spam.local, eggs.local]
         addresses: [8.8.8.8]
+      mtu: 0
     eth1:
       match:
         macaddress: '66:77:88:99:00:11'
@@ -61,6 +62,7 @@ network:
       nameservers:
         search: [foo.local, bar.local]
         addresses: [4.4.4.4]
+      mtu: 1
 """
 
 
@@ -286,11 +288,13 @@ class TestNetworkStateParseNameservers:
                     "nameservers": ["8.8.8.8"],
                     "search": ["spam.local", "eggs.local"],
                 }
+                assert iface["mtu"] == 0
             else:
                 assert iface["dns"] == {
                     "nameservers": ["4.4.4.4"],
                     "search": ["foo.local", "bar.local"],
                 }
+                assert iface["mtu"] == 1
 
         # Ensure DNS defined on interface does not exist globally
         for server in ["4.4.4.4", "8.8.8.8"]:

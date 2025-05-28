@@ -259,12 +259,16 @@ def netplan_api_write_yaml_file(net_config_content: str) -> bool:
     try:
         from netplan.parser import Parser  # type: ignore
         from netplan.state import State  # type: ignore
-    except ImportError:
+    except ImportError as err:
         LOG.debug(
-            "No netplan python module. Fallback to write %s",
+            "No netplan python module. Fallback to write %s %s",
             CLOUDINIT_NETPLAN_FILE,
+            err
         )
         return False
+
+    LOG.debug("Using netplan python module")
+
     try:
         with SpooledTemporaryFile(mode="w") as f:
             f.write(net_config_content)
